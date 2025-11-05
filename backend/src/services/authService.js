@@ -47,6 +47,21 @@ const authService = {
       throw error;
     }
   },
+
+  refreshToken: async (refreshToken) => {
+    try {
+      const refreshTokenDecoded = await verifyToken(refreshToken, process.env.JWT_REFRESH_TOKEN);
+      const accessToken = generateToken(
+        { userId: refreshTokenDecoded._id },
+        process.env.JWT_SECRET_TOKEN,
+        ACCESS_TOKEN_TTL
+      );
+
+      return accessToken;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default authService;

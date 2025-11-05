@@ -51,6 +51,24 @@ const authController = {
       console.log({ message: error.message });
     }
   },
+
+  refreshToken: async (req, res) => {
+    try {
+      const token = req.cookies?.refreshToken;
+      const newAccessToken = await authService.refreshToken(token);
+
+      res.cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: ms("1 hour"),
+      });
+
+      res.status(200).json({ newAccessToken });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  },
 };
 
 export default authController;
