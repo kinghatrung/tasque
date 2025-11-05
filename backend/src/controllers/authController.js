@@ -55,16 +55,16 @@ const authController = {
   refreshToken: async (req, res) => {
     try {
       const token = req.cookies?.refreshToken;
-      const newAccessToken = await authService.refreshToken(token);
+      const accessToken = await authService.refreshToken(token);
 
-      res.cookie("accessToken", newAccessToken, {
+      res.cookie("accessToken", accessToken, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
         maxAge: ms("1 hour"),
       });
 
-      res.status(200).json({ newAccessToken });
+      res.status(200).json({ accessToken });
     } catch (err) {
       res.status(500).json({ message: err.message });
     }

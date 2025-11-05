@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 
 import User from "../models/User.js";
-import { generateToken } from "../providers/jwtProvider.js";
+import { generateToken, verifyToken } from "../providers/jwtProvider.js";
 
 const ACCESS_TOKEN_TTL = "1 hour";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000;
@@ -50,7 +50,7 @@ const authService = {
 
   refreshToken: async (refreshToken) => {
     try {
-      const refreshTokenDecoded = await verifyToken(refreshToken, process.env.JWT_REFRESH_TOKEN);
+      const refreshTokenDecoded = verifyToken(refreshToken, process.env.JWT_SECRET_TOKEN);
       const accessToken = generateToken(
         { userId: refreshTokenDecoded._id },
         process.env.JWT_SECRET_TOKEN,
