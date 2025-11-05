@@ -39,6 +39,18 @@ const authController = {
       console.log({ message: error.message });
     }
   },
+
+  signOut: async (req, res) => {
+    try {
+      res.clearCookie("accessToken");
+      res.clearCookie("refreshToken");
+
+      res.status(200).json({ message: "Đăng xuất thành công!" });
+    } catch (error) {
+      res.status(500).json("Lỗi hệ thống, vui lòng thử lại sau!");
+      console.log({ message: error.message });
+    }
+  },
 };
 
 export default authController;
