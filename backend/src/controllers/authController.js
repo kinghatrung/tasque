@@ -1,18 +1,42 @@
 import authService from "../services/authService.js";
+import ms from "ms";
 
 const authController = {
-  signIn: async (req, res) => {},
+  signIn: async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      const { user, accessToken, refreshToken } = await authService.signIn(username, password);
+
+      res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: ms("15 m"),
+      });
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: ms("14 days"),
+      });
+
+      res.status(200).json({ message: `Người dùng ${user.displayName} đăng nhập thành công!`, accessToken });
+    } catch (error) {
+      res.status(500).json("Lỗi hệ thống, vui lòng thử lại sau!");
+      console.log({ message: error.message });
+    }
+  },
 
   signUp: async (req, res) => {
     try {
       const { username, password, email, firstName, lastName } = req.body;
-
       await authService.signUp(username, password, email, firstName, lastName);
 
       res.status(201).json({ message: "Đăng ký thành công!" });
-    } catch (err) {
+    } catch (error) {
       res.status(500).json("Lỗi hệ thống, vui lòng thử lại sau!");
-      console.log({ message: err.message });
+      console.log({ message: error.message });
     }
   },
 };
