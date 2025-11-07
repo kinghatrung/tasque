@@ -22,7 +22,7 @@ authorizedAxiosInstance.interceptors.request.use(
 authorizedAxiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     if (response.data?.message) {
-      toast.success(response.data.message);
+      toast.error(response.data.message);
     }
     return response;
   },

@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
@@ -8,6 +9,7 @@ import { Input } from "~/components/ui/input";
 import { Card, CardContent } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { FieldSeparator } from "~/components/ui/field";
+import { authService } from "~/services/authService";
 
 const signInSchema = z.object({
   username: z.string().min(6, "Tên đăng nhập phải có ít nhất 8 ký tự"),
@@ -17,13 +19,19 @@ const signInSchema = z.object({
 type SignInFormValues = z.infer<typeof signInSchema>;
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<SignInFormValues>({ resolver: zodResolver(signInSchema) });
 
-  const handleOnSubmit = () => {};
+  const handleOnSubmit = async (data: SignInFormValues) => {
+    const { username, password } = data;
+    await authService.signIn(username, password);
+    navigate("/");
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

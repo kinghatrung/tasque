@@ -33,7 +33,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"div">)
   const handleOnSubmit = async (data: SignUpFormValues) => {
     const { username, password, email, lastName, firstName } = data;
 
-    await authService.signUp(username, password, email, firstName, lastName);
+    await authService.signUp(username, email, password, firstName, lastName);
     navigate("/signin");
   };
 

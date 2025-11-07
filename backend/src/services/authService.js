@@ -39,7 +39,7 @@ const authService = {
         username,
         hashPassword: hashedPassword,
         email,
-        displayName: `${firstName} ${lastName}`,
+        displayName: `${lastName} ${firstName}`,
       });
 
       return true;
