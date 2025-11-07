@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
 
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
@@ -8,6 +9,7 @@ import { FieldSeparator } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Card, CardContent } from "~/components/ui/card";
+import { authService } from "~/services/authService";
 
 const signUpSchema = z.object({
   lastName: z.string().min(1, "Họ bắt buộc phải có"),
@@ -20,13 +22,20 @@ const signUpSchema = z.object({
 type SignUpFormValues = z.infer<typeof signUpSchema>;
 
 export function SignupForm({ className, ...props }: React.ComponentProps<"div">) {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<SignUpFormValues>({ resolver: zodResolver(signUpSchema) });
 
-  const handleOnSubmit = () => {};
+  const handleOnSubmit = async (data: SignUpFormValues) => {
+    const { username, password, email, lastName, firstName } = data;
+
+    await authService.signUp(username, password, email, firstName, lastName);
+    navigate("/signin");
+  };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

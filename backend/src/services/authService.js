@@ -29,9 +29,9 @@ const authService = {
         throw new Error("Vui lòng điền đầy đủ thông tin!");
 
       const user = await User.findOne({ username });
-      const email = await User.findOne({ email });
+      const checkEmail = await User.findOne({ email });
       if (user) throw new Error("Tên đăng nhập đã tồn tại!");
-      if (email) throw new Error("Email đã tồn tại!");
+      if (checkEmail) throw new Error("Email đã tồn tại!");
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
