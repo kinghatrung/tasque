@@ -26,4 +26,9 @@ export const authService = {
 
     return res.data.accessToken;
   },
+
+  test: async () => {
+    const res = await authorizedAxiosInstance.get("users/test");
+    return res.data;
+  },
 };

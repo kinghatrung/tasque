@@ -1,12 +1,29 @@
 import axios from "axios";
-import type { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import type { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError, AxiosRequestConfig } from "axios";
 import { toast } from "sonner";
+import type { Store } from "@reduxjs/toolkit";
+
+import { signOut } from "~/redux/slices/authSlice";
+import { authService } from "~/services/authService";
+import type { AppDispatch } from "~/redux/store";
+
+interface ErrorResponse {
+  message?: string;
+}
+
+let axiosReduxStore: { dispatch: AppDispatch } | undefined;
+
+export const injectStore = (mainStore: Store) => {
+  axiosReduxStore = mainStore;
+};
 
 const authorizedAxiosInstance: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   timeout: 1000 * 60 * 10,
   withCredentials: true,
 });
+
+let refreshTokenPromise: Promise<string | undefined> | null = null;
 
 // 🟢 REQUEST INTERCEPTOR
 authorizedAxiosInstance.interceptors.request.use(
@@ -22,11 +39,52 @@ authorizedAxiosInstance.interceptors.request.use(
 authorizedAxiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     if (response.data?.message) {
-      toast.error(response.data.message);
+      toast.success(response.data.message);
     }
     return response;
   },
   async (error: AxiosError) => {
+    const status = error.response?.status;
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+
+    // TH1: Access token hết hạn hoặc không hợp lệ
+    if (status === 401) {
+      axiosReduxStore?.dispatch(signOut(false));
+      return Promise.reject(error);
+    }
+
+    // TH2: Refresh token còn hạn => gọi API refresh
+    if (status === 410 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      if (!refreshTokenPromise) {
+        refreshTokenPromise = authService
+          .refreshToken()
+          .then((data) => {
+            return data?.accessToken;
+          })
+          .catch((_error) => {
+            axiosReduxStore?.dispatch(signOut(false));
+            return Promise.reject(_error);
+          })
+          .finally(() => {
+            refreshTokenPromise = null;
+          });
+      }
+
+      try {
+        await refreshTokenPromise;
+        return authorizedAxiosInstance(originalRequest);
+      } catch (err) {
+        return Promise.reject(err);
+      }
+    }
+
+    // TH3: Các lỗi khác
+    if (status !== 410 && status !== 401) {
+      toast.error((error.response?.data as ErrorResponse)?.message || "Đã xảy ra lỗi!");
+    }
+
     return Promise.reject(error);
   }
 );
