@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import { generateToken, verifyToken } from "../providers/jwtProvider.js";
 
-const ACCESS_TOKEN_TTL = "1 hour";
+const ACCESS_TOKEN_TTL = "15 m";
 const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000;
 
 const authService = {
@@ -29,9 +29,9 @@ const authService = {
         throw new Error("Vui lòng điền đầy đủ thông tin!");
 
       const user = await User.findOne({ username });
-      const email = await User.findOne({ email });
+      const checkEmail = await User.findOne({ email });
       if (user) throw new Error("Tên đăng nhập đã tồn tại!");
-      if (email) throw new Error("Email đã tồn tại!");
+      if (checkEmail) throw new Error("Email đã tồn tại!");
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -39,7 +39,7 @@ const authService = {
         username,
         hashPassword: hashedPassword,
         email,
-        displayName: `${firstName} ${lastName}`,
+        displayName: `${lastName} ${firstName}`,
       });
 
       return true;
