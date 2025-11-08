@@ -61,7 +61,7 @@ const authController = {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: ms("1 hour"),
+        maxAge: ms("15 m"),
       });
 
       res.status(200).json({ accessToken });
