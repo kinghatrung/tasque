@@ -61,7 +61,7 @@ authorizedAxiosInstance.interceptors.response.use(
         refreshTokenPromise = authService
           .refreshToken()
           .then((data) => {
-            return data?.accessToken;
+            return data;
           })
           .catch((_error) => {
             axiosReduxStore?.dispatch(signOut(false));

@@ -1,4 +1,4 @@
-import { LayoutGrid, CheckCircle2, Clock, ListTodo, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, Settings, LogOut, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import type { AppDispatch } from "~/redux/store";
 
 import { signOut } from "~/redux/slices/authSlice";
+import { menuItems } from "~/config/menu";
 
 function Sidebar() {
   const navigate = useNavigate();
@@ -13,29 +14,6 @@ function Sidebar() {
 
   const [isOpen, setIsOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const menuItems = [
-    {
-      label: "Tất cả công việc",
-      to: "/",
-      icon: LayoutGrid,
-    },
-    {
-      label: "Thống kê",
-      to: "/statis",
-      icon: ListTodo,
-    },
-    {
-      label: "Bạn bè",
-      to: "/friends",
-      icon: Clock,
-    },
-    {
-      label: "Nhóm",
-      to: "/group",
-      icon: CheckCircle2,
-    },
-  ];
 
   const handleSignOut = async () => {
     await dispatch(signOut(false));
@@ -71,6 +49,7 @@ function Sidebar() {
               return (
                 <NavLink
                   to={item.to}
+                  key={item.label}
                   className={({ isActive }) =>
                     `w-full text-left flex items-center gap-3 text-lg font-medium p-4 transition-colors flex-nowrap min-w-0 ${
                       isCollapsed ? "justify-center px-2" : ""
