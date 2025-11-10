@@ -19,7 +19,11 @@ const authMiddleware = {
       next();
     } catch (error) {
       // Token thông báo đã hết hạn
-      if (error.message?.includes("jwt expired")) return res.status(410).json({ message: "Token expired" });
+      // if (error.message?.includes("jwt expired")) return res.status(410).json({ message: "Token expired" });
+
+      if (error.name === "TokenExpiredError" || error.message?.includes("jwt expired")) {
+        return res.status(410).json({ message: "Token expired" });
+      }
 
       // "message": "Token không hợp lệ hoặc đã hết hạn!"
       res.status(401).json({ message: "Unauthorized" });

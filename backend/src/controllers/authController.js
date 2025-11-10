@@ -11,7 +11,7 @@ const authController = {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: ms("15 m"),
+        maxAge: ms("15m"),
       });
 
       res.cookie("refreshToken", refreshToken, {
@@ -61,7 +61,7 @@ const authController = {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: ms("15 m"),
+        maxAge: ms("15m"),
       });
 
       res.status(200).json({ accessToken });
