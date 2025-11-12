@@ -62,7 +62,7 @@ function TaskApp() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Select>
+          <Select defaultValue="all">
             <SelectTrigger
               className="w-50 border border-gray-300 transition-all duration-300 cursor-pointer"
               style={{ height: "40px" }}
@@ -72,6 +72,9 @@ function TaskApp() {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Trạng thái</SelectLabel>
+                <SelectItem className="cursor-pointer h-10" value="all">
+                  Tất cả
+                </SelectItem>
                 <SelectItem className="cursor-pointer h-10" value="todo">
                   Chưa làm
                 </SelectItem>
@@ -85,7 +88,7 @@ function TaskApp() {
             </SelectContent>
           </Select>
 
-          <Select>
+          <Select defaultValue="all">
             <SelectTrigger
               className="w-50 border border-gray-300 transition-all duration-300 cursor-pointer"
               style={{ height: "40px" }}
@@ -95,6 +98,9 @@ function TaskApp() {
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Mức độ</SelectLabel>
+                <SelectItem className="cursor-pointer h-10" value="all">
+                  Tất cả
+                </SelectItem>
                 <SelectItem className="cursor-pointer h-10" value="short">
                   Thấp
                 </SelectItem>
@@ -118,7 +124,7 @@ function TaskApp() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Are you absolutely sure?</DialogTitle>
+              <DialogTitle>Tạo công việc mới</DialogTitle>
               <DialogDescription>
                 This action cannot be undone. This will permanently delete your account and remove your data from our
                 servers.
