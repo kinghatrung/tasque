@@ -116,7 +116,7 @@ function TaskApp() {
         </div>
 
         <Dialog>
-          <DialogTrigger>
+          <DialogTrigger asChild>
             <Button className="h-10">
               <Plus />
               Thêm Task
@@ -124,7 +124,7 @@ function TaskApp() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Tạo công việc mới</DialogTitle>
+              <DialogTitle className="font-bold text-xl">Tạo công việc mới</DialogTitle>
               <DialogDescription>
                 This action cannot be undone. This will permanently delete your account and remove your data from our
                 servers.
@@ -135,11 +135,6 @@ function TaskApp() {
       </div>
 
       <div className="flex flex-col gap-5">
-        <Task />
-        <Task />
-        <Task />
-        <Task />
-        <Task />
         <Task />
         <Button>Load more</Button>
       </div>
