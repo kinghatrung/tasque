@@ -10,6 +10,7 @@ const taskController = {
       res.status(500).json({ message: error.message });
     }
   },
+
   createTask: async (req, res) => {
     try {
       const { title, description, status, priority, deadline, createdBy } = req.body;

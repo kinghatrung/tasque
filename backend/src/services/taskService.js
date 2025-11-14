@@ -3,7 +3,7 @@ import Task from "../models/Task.js";
 const taskService = {
   getTasks: async () => {
     try {
-      const tasks = await Task.find();
+      const tasks = await Task.find().populate("createdBy", "displayName");
 
       return tasks;
     } catch (error) {

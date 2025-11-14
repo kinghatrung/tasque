@@ -1,4 +1,5 @@
 import { Search, Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   Dialog,
@@ -8,15 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -28,18 +21,16 @@ import {
 } from "~/components/ui/select";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "~/components/ui/pagination";
 import Task from "~/components/common/Task";
+import { taskService } from "~/services/taskService";
+import type { TaskType } from "~/types/task";
 
 function TaskApp() {
+  const { data: tasks } = useQuery<TaskType[]>({
+    queryKey: ["tasks"],
+    queryFn: async () => taskService.getTasks(),
+  });
+
   return (
     <div className="flex flex-col min-h-svh">
       <Card className="mb-5">
@@ -135,7 +126,9 @@ function TaskApp() {
       </div>
 
       <div className="flex flex-col gap-5">
-        <Task />
+        {tasks?.map((task) => (
+          <Task key={task._id} task={task} />
+        ))}
         <Button>Load more</Button>
       </div>
     </div>
