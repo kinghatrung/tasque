@@ -21,6 +21,16 @@ const taskController = {
       res.status(500).json({ message: error.message });
     }
   },
+
+  deleteTask: async (req, res) => {
+    try {
+      const id = req.params.id;
+      await taskService.deleteTask(id);
+      res.sendStatus(200);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
 };
 
 export default taskController;

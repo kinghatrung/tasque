@@ -30,6 +30,20 @@ const taskService = {
       throw error;
     }
   },
+
+  deleteTask: async (id) => {
+    try {
+      const deleted = await Task.findByIdAndDelete(id);
+
+      if (!deleted) {
+        throw new Error("Task not found");
+      }
+
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default taskService;
