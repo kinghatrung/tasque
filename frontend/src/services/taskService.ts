@@ -3,7 +3,6 @@ import authorizedAxiosInstance from "~/utils/authorizedAxios";
 export const taskService = {
   getTasks: async () => {
     const res = await authorizedAxiosInstance.get("tasks");
-
     return res.data.tasks;
   },
 
@@ -13,7 +12,7 @@ export const taskService = {
     status: string,
     priority: string,
     deadline: Date,
-    createdBy: string
+    createdBy: string | undefined
   ) => {
     const res = await authorizedAxiosInstance.post("tasks/task", {
       title,
@@ -23,7 +22,11 @@ export const taskService = {
       deadline,
       createdBy,
     });
+    return res.data;
+  },
 
+  deleteTask: async (idTask: string) => {
+    const res = await authorizedAxiosInstance.delete(`tasks/del/${idTask}`);
     return res.data;
   },
 };

@@ -16,7 +16,7 @@ const taskController = {
       const { title, description, status, priority, deadline, createdBy } = req.body;
       await taskService.createTask(title, description, status, priority, deadline, createdBy);
 
-      res.sendStatus(200);
+      res.status(200).json({ message: "Tạo công việc thành công" });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
@@ -26,7 +26,7 @@ const taskController = {
     try {
       const id = req.params.id;
       await taskService.deleteTask(id);
-      res.sendStatus(200);
+      res.status(200).json({ message: "Xóa công việc thành công" });
     } catch (error) {
       res.status(500).json({ message: error.message });
     }

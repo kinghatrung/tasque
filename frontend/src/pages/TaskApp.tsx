@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Search, Plus } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useSelector } from "react-redux";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { ChevronDown, ChevronUp, Equal, Calendar as CalendarIcon, CircleAlert, Search, Plus } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "~/components/ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -37,26 +37,55 @@ import { Calendar } from "~/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 
 const taskSchema = z.object({
-  title: z.string("Tên công việc bắt buộc phải có"),
-  description: z.string("Mô tả công việc bắt buộc phải có"),
-  status: z.string("Trạng thái công việc bắt buộc phải có"),
-  priority: z.string("Trạng thái công việc bắt buộc phải có"),
-  deadline: z.date,
+  title: z.string().nonempty("Tên công việc bắt buộc phải có"),
+  description: z.string().nonempty("Mô tả công việc bắt buộc phải có"),
+  status: z.string().nonempty("Trạng thái công việc bắt buộc phải có"),
+  priority: z.string().nonempty("Trạng thái công việc bắt buộc phải có"),
+  deadline: z.date("Hạn công việc không được để trống"),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
 
 function TaskApp() {
+  const queryClient = useQueryClient();
   const { currentUser } = useSelector(authSelect);
+
   const [openChange, setOpenChange] = useState(false);
   const [date, setDate] = useState<Date>();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      status: "",
+      priority: "",
+      deadline: new Date(),
+    },
+  });
 
   const { data: tasks } = useQuery<TaskType[]>({
     queryKey: ["tasks"],
     queryFn: async () => taskService.getTasks(),
   });
 
-  const handleCreateTask = async () => {};
+  const handleCreateTask = async (payload: TaskFormValues) => {
+    const { title, description, status, priority, deadline } = payload;
+    const idUser = currentUser?._id;
+
+    await taskService.createTask(title, description, status, priority, deadline, idUser);
+    await queryClient.invalidateQueries({ queryKey: ["tasks"] });
+
+    reset();
+    setDate(undefined);
+    setOpenChange(false);
+  };
 
   return (
     <div className="flex flex-col min-h-svh">
@@ -74,7 +103,7 @@ function TaskApp() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
           <Input
             type="text"
-            placeholder="Nhập để tìm sản phẩm..."
+            placeholder="Nhập để tìm công việc..."
             className="pl-9 pr-4 py-2 h-10 border border-gray-300  text-sm transition-all duration-300"
           />
         </div>
@@ -134,7 +163,7 @@ function TaskApp() {
         </div>
 
         {currentUser?.role === "admin" && (
-          <Dialog onOpenChange={setOpenChange}>
+          <Dialog open={openChange} onOpenChange={setOpenChange}>
             <DialogTrigger asChild>
               <Button className="h-10 cursor-pointer">
                 <Plus />
@@ -150,13 +179,14 @@ function TaskApp() {
                 </DialogDescription>
               </DialogHeader>
 
-              <form onSubmit={handleCreateTask}>
+              <form onSubmit={handleSubmit(handleCreateTask)}>
                 <div className="flex flex-col gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="title" className="block text-sm">
                       Tên công việc
                     </Label>
-                    <Input id="title" type="text" placeholder="Quét nhà..." />
+                    <Input id="title" type="text" placeholder="Quét nhà..." {...register("title")} />
+                    {errors.title && <p className="text-destructive text-sm">{errors.title.message}</p>}
                   </div>
 
                   <div className="flex gap-3">
@@ -164,7 +194,7 @@ function TaskApp() {
                       <Label htmlFor="status" className="block text-sm">
                         Trạng thái
                       </Label>
-                      <Select>
+                      <Select defaultValue="" onValueChange={(value) => setValue("status", value)}>
                         <SelectTrigger
                           id="status"
                           className="w-full border border-gray-300 transition-all duration-300 cursor-pointer"
@@ -186,13 +216,17 @@ function TaskApp() {
                           </SelectGroup>
                         </SelectContent>
                       </Select>
+                      {errors.status && <p className="text-destructive text-sm">{errors.status.message}</p>}
                     </div>
 
                     <div className="space-y-2 w-full">
                       <Label htmlFor="priority" className="block text-sm">
                         Độ ưu tiên
                       </Label>
-                      <Select>
+                      <Select
+                        defaultValue=""
+                        onValueChange={(value) => setValue("priority", value, { shouldValidate: true })}
+                      >
                         <SelectTrigger
                           id="priority"
                           className="w-full border border-gray-300 transition-all duration-300 cursor-pointer"
@@ -202,49 +236,83 @@ function TaskApp() {
                         <SelectContent>
                           <SelectGroup>
                             <SelectLabel>Độ ưu tiên</SelectLabel>
-                            <SelectItem className="cursor-pointer h-10" value="short">
+                            <SelectItem className="cursor-pointer h-10" value="low">
+                              <ChevronDown className="w-full h-full" />
                               Thấp
                             </SelectItem>
                             <SelectItem className="cursor-pointer h-10" value="medium">
+                              <Equal className="w-full h-full " />
                               Trung bình
                             </SelectItem>
                             <SelectItem className="cursor-pointer h-10" value="high">
+                              <ChevronUp className="w-full h-full" />
                               Cao
                             </SelectItem>
                           </SelectGroup>
                         </SelectContent>
                       </Select>
+                      {errors.priority && <p className="text-destructive text-sm">{errors.priority.message}</p>}
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="deadline" className="block text-sm">
-                      Hạn công việc
-                    </Label>
-                    <Popover>
-                      <PopoverTrigger id="deadline" asChild>
-                        <Button
-                          variant={"outline"}
-                          className={`w-full justify-start text-left font-normal cursor-pointer ${
-                            !date && "text-muted-foreground"
-                          }`}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {date ? format(date, "dd/MM/yyyy") : <span>Chọn ngày</span>}
-                        </Button>
-                      </PopoverTrigger>
+                  <div className="flex items-center gap-3">
+                    <div className="space-y-2 w-full">
+                      <Label htmlFor="deadline" className="block text-sm">
+                        Hạn công việc
+                      </Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            id="deadline"
+                            className="w-full justify-start text-left font-normal cursor-pointer"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date ? format(date, "dd/MM/yyyy") : <span>Chọn ngày</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={date}
+                            captionLayout="dropdown"
+                            onSelect={(date) => {
+                              if (!date) return;
+                              setValue("deadline", date, { shouldValidate: true });
+                              setDate(date);
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      {errors.deadline && <p className="text-destructive text-sm">{errors.deadline.message}</p>}
+                    </div>
 
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-                      </PopoverContent>
-                    </Popover>
+                    {/* Thời gian */}
+                    {/* <div className="space-y-2">
+                      <Label htmlFor="time" className="block text-sm">
+                        Thời gian
+                      </Label>
+                      <Input
+                        type="time"
+                        id="time"
+                        step="1"
+                        defaultValue="00:00:00"
+                        className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                      />
+                    </div> */}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="description" className="block text-sm">
                       Mô tả
                     </Label>
-                    <Input id="description" type="text" placeholder="Quét nhà như thế nào?..." />
+                    <Input
+                      id="description"
+                      type="text"
+                      placeholder="Quét nhà như thế nào?..."
+                      {...register("description")}
+                    />
+                    {errors.description && <p className="text-destructive text-sm"> {errors.description.message}</p>}
                   </div>
 
                   <div className="flex gap-2 justify-end">
@@ -269,10 +337,24 @@ function TaskApp() {
       </div>
 
       <div className="flex flex-col gap-5">
-        {tasks?.map((task) => (
-          <Task key={task._id} task={task} />
-        ))}
-        {/* <Button>Load more</Button> */}
+        {tasks?.length === 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <CircleAlert className="w-10 h-10" />
+              </EmptyMedia>
+              <EmptyTitle className="text-2xl font-bold">Không có công việc nào</EmptyTitle>
+              <EmptyDescription className="text-lg">Hãy tạo thêm công việc</EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={() => setOpenChange(true)} className="cursor-pointer">
+                Thêm công việc
+              </Button>
+            </EmptyContent>
+          </Empty>
+        ) : (
+          tasks?.map((task) => <Task key={task._id} task={task} />)
+        )}
       </div>
     </div>
   );
