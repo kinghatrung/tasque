@@ -31,6 +31,18 @@ const taskController = {
       res.status(500).json({ message: error.message });
     }
   },
+
+  editTask: async (req, res) => {
+    try {
+      const id = req.params.id;
+      const { title, description, status, priority, deadline } = req.body;
+      await taskService.editTask(id, title, description, status, priority, deadline);
+
+      res.status(200).json({ message: "Lưu công việc thành công" });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
 };
 
 export default taskController;

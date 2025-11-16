@@ -29,4 +29,22 @@ export const taskService = {
     const res = await authorizedAxiosInstance.delete(`tasks/del/${idTask}`);
     return res.data;
   },
+
+  editTask: async (
+    idTask: string,
+    title: string,
+    description: string,
+    status: string,
+    priority: string,
+    deadline: Date
+  ) => {
+    const res = await authorizedAxiosInstance.put(`tasks/edit/${idTask}`, {
+      title,
+      description,
+      status,
+      priority,
+      deadline,
+    });
+    return res.data;
+  },
 };

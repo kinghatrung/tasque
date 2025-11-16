@@ -1,8 +1,24 @@
-import { useState } from "react";
-import { Trash2, ChevronRight, Settings, ChevronDown, ChevronUp, Equal } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Trash2, ChevronRight, Settings, ChevronDown, ChevronUp, Equal, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
+import { Calendar } from "~/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Label } from "~/components/ui/label";
+import { Input } from "~/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -19,14 +35,57 @@ import { TASK_STATUS, TASK_PRIORITY } from "~/constants/task";
 import type { TaskStatusKey, TaskPriorityKey } from "~/constants/task";
 import { taskService } from "~/services/taskService";
 
+const taskSchema = z.object({
+  title: z.string(),
+  description: z.string(),
+  status: z.string(),
+  priority: z.string(),
+  deadline: z.date(),
+});
+
+type TaskFormValues = z.infer<typeof taskSchema>;
+
 function Task({ task }: TaskProps) {
   const queryClient = useQueryClient();
 
-  const [openChange, setOpenChange] = useState(false);
+  const [openChangeEdit, setOpenChangeEdit] = useState(false);
+  const [openChangeDelete, setOpenChangeDelete] = useState(false);
+
+  const { register, handleSubmit, setValue, reset, watch } = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      status: "",
+      priority: "",
+      deadline: new Date(),
+    },
+  });
+
+  useEffect(() => {
+    if (openChangeEdit) {
+      reset({
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        priority: task.priority,
+        deadline: new Date(task.deadline),
+      });
+    }
+  }, [openChangeEdit, reset, task]);
+
+  const deadline = watch("deadline");
 
   const handleDeleteTask = async (idTask: string) => {
     await taskService.deleteTask(idTask);
     await queryClient.invalidateQueries({ queryKey: ["tasks"] });
+  };
+
+  const handleEditTask = async (payload: TaskFormValues) => {
+    const { title, description, status, priority, deadline } = payload;
+    await taskService.editTask(task._id, title, description, status, priority, deadline);
+    await queryClient.invalidateQueries({ queryKey: ["tasks"] });
+    setOpenChangeEdit(false);
   };
 
   return (
@@ -43,7 +102,7 @@ function Task({ task }: TaskProps) {
               Tiếp
             </Button>
 
-            <Dialog>
+            <Dialog open={openChangeEdit} onOpenChange={setOpenChangeEdit}>
               <DialogTrigger asChild>
                 <Button className="cursor-pointer" variant="ghost">
                   <Settings />
@@ -51,16 +110,146 @@ function Task({ task }: TaskProps) {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle className="font-bold text-xl">Tạo công việc mới</DialogTitle>
+                  <DialogTitle className="font-bold text-xl">Chỉnh sửa thông tin công việc</DialogTitle>
                   <DialogDescription>
                     This action cannot be undone. This will permanently delete your account and remove your data from
                     our servers.
                   </DialogDescription>
                 </DialogHeader>
+
+                <form onSubmit={handleSubmit(handleEditTask)}>
+                  <div className="flex flex-col gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="title" className="block text-sm">
+                        Tên công việc
+                      </Label>
+                      <Input id="title" type="text" placeholder="Quét nhà..." {...register("title")} />
+                    </div>
+
+                    <div className="flex gap-3">
+                      <div className="space-y-2 w-full">
+                        <Label htmlFor="status" className="block text-sm">
+                          Trạng thái
+                        </Label>
+                        <Select defaultValue={task.status} onValueChange={(value) => setValue("status", value)}>
+                          <SelectTrigger
+                            id="status"
+                            className="w-full border border-gray-300 transition-all duration-300 cursor-pointer"
+                          >
+                            <SelectValue placeholder="Trạng thái công việc..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Trạng thái</SelectLabel>
+                              <SelectItem className="cursor-pointer h-10" value="todo">
+                                Chưa làm
+                              </SelectItem>
+                              <SelectItem className="cursor-pointer h-10" value="inprogress">
+                                Đang làm
+                              </SelectItem>
+                              <SelectItem className="cursor-pointer h-10" value="done">
+                                Hoàn thành
+                              </SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2 w-full">
+                        <Label htmlFor="priority" className="block text-sm">
+                          Độ ưu tiên
+                        </Label>
+                        <Select
+                          defaultValue={task.priority}
+                          onValueChange={(value) => setValue("priority", value, { shouldValidate: true })}
+                        >
+                          <SelectTrigger
+                            id="priority"
+                            className="w-full border border-gray-300 transition-all duration-300 cursor-pointer"
+                          >
+                            <SelectValue placeholder="Độ ưu tiên công việc..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Độ ưu tiên</SelectLabel>
+                              <SelectItem className="cursor-pointer h-10" value="low">
+                                <ChevronDown className="w-full h-full" />
+                                Thấp
+                              </SelectItem>
+                              <SelectItem className="cursor-pointer h-10" value="medium">
+                                <Equal className="w-full h-full " />
+                                Trung bình
+                              </SelectItem>
+                              <SelectItem className="cursor-pointer h-10" value="high">
+                                <ChevronUp className="w-full h-full" />
+                                Cao
+                              </SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="space-y-2 w-full">
+                        <Label htmlFor="deadline" className="block text-sm">
+                          Hạn công việc
+                        </Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              id="deadline"
+                              className="w-full justify-start text-left font-normal cursor-pointer"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {deadline ? format(deadline, "dd/MM/yyyy") : <span>Chọn ngày</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={deadline}
+                              captionLayout="dropdown"
+                              onSelect={(date) => date && setValue("deadline", date)}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description" className="block text-sm">
+                        Mô tả
+                      </Label>
+                      <Input
+                        id="description"
+                        type="text"
+                        placeholder="Quét nhà như thế nào?..."
+                        {...register("description")}
+                      />
+                    </div>
+
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        className="cursor-pointer"
+                        type="button"
+                        variant="outline"
+                        onClick={() => setOpenChangeEdit(false)}
+                      >
+                        Hủy
+                      </Button>
+
+                      <Button type="submit" className="cursor-pointer text-white">
+                        Lưu thay đổi
+                      </Button>
+                    </div>
+                  </div>
+                </form>
               </DialogContent>
             </Dialog>
 
-            <Dialog onOpenChange={setOpenChange} open={openChange}>
+            <Dialog onOpenChange={setOpenChangeDelete} open={openChangeDelete}>
               <DialogTrigger asChild>
                 <Button
                   className="cursor-pointer text-destructive hover:bg-destructive/10 hover:text-destructive"
@@ -78,7 +267,7 @@ function Task({ task }: TaskProps) {
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button onClick={() => setOpenChange(false)} className="cursor-pointer" variant="outline">
+                  <Button onClick={() => setOpenChangeDelete(false)} className="cursor-pointer" variant="outline">
                     Hủy
                   </Button>
                   <Button onClick={() => handleDeleteTask(task._id)} className="cursor-pointer">
