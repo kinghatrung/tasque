@@ -6,8 +6,6 @@ import { authSelect } from "~/redux/slices/authSlice";
 function Header() {
   const { currentUser } = useSelector(authSelect);
 
-  console.log(currentUser);
-
   return (
     <div className="w-full h-20 shadow-sm bg-white">
       <div className="px-8 h-full">

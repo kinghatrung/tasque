@@ -10,7 +10,7 @@ const authMiddleware = {
     }
     try {
       const accessTokenDecoded = await verifyToken(accessTokenFromCookie, process.env.JWT_SECRET_TOKEN);
-      const user = await User.findOne(accessTokenDecoded.id).select("-hashPassword");
+      const user = await User.findOne({ _id: accessTokenDecoded.userId }).select("-hashPassword");
       if (!user) {
         return res.status(404).json({ message: "Không tìm thấy người dùng!" });
       }
