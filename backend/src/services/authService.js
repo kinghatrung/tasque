@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import { generateToken, verifyToken } from "../providers/jwtProvider.js";
 
 const ACCESS_TOKEN_TTL = "15m";
-const REFRESH_TOKEN_TTL = 14 * 24 * 60 * 60 * 1000;
+const REFRESH_TOKEN_TTL = "14d";
 
 const authService = {
   signIn: async (username, password) => {

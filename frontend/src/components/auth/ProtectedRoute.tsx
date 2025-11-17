@@ -6,7 +6,9 @@ import { authSelect } from "~/redux/slices/authSlice";
 function ProtectedRoute() {
   const { currentUser, loading } = useSelector(authSelect);
 
-  if (loading) return <div className="bg-white flex items-center justify-center min-h-svh">...Đang tải</div>;
+  if (loading && !currentUser)
+    return <div className="bg-white flex items-center justify-center min-h-svh">...Đang tải</div>;
+
   if (!currentUser) return <Navigate to="/signin" replace />;
 
   return <Outlet />;
