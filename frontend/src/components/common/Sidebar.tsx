@@ -22,14 +22,14 @@ function Sidebar() {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-40 border-r border-border bg-card transition-all duration-300 md:relative md:translate-x-0 ${
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      } ${isCollapsed ? "w-[88px]" : "w-[300px]"}`}
+      className={`fixed inset-y-0 left-0 z-50 border-r border-border bg-card transition-all duration-300 md:relative md:translate-x-0 ${
+        isCollapsed ? "w-[88px]" : "w-[300px]"
+      }`}
     >
       <div className="flex flex-col h-full">
         {/* Logo */}
-        <header className={`border-b border-border p-6 transition-all duration-300 ${isCollapsed ? "p-3" : "p-6"}`}>
-          <div className={`flex ${isCollapsed ? "justify-center" : "justify-between"}  items-center gap-2`}>
+        <div className={`p-6 transition-all shadow-sm duration-300`}>
+          <div className={`flex ${isCollapsed ? "justify-center" : "justify-between"} items-center`}>
             <Link to="/">
               <CheckCircle2 className="h-8 w-8" />
             </Link>
@@ -39,7 +39,7 @@ function Sidebar() {
               </Link>
             )}
           </div>
-        </header>
+        </div>
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto p-4">

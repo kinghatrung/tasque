@@ -4,9 +4,10 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import { connect } from "./config/db.js";
+import authMiddleware from "./middlewares/authMiddleware.js";
 import authRouter from "./routes/authRouter.js";
 import userRouter from "./routes/userRouter.js";
-import authMiddleware from "./middlewares/authMiddleware.js";
+import taskRouter from "./routes/taskRouter.js";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use("/api/auth", authRouter);
 
 app.use(authMiddleware.isAuthorized);
 app.use("/api/users", userRouter);
+app.use("/api/tasks", taskRouter);
 
 connect().then(() => {
   app.listen(PORT, () => {

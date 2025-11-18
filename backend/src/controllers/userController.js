@@ -7,6 +7,7 @@ const userController = {
       res.status(500).json({ message: error.message });
     }
   },
+
   test: async (rqe, res) => {
     try {
       res.sendStatus(200);
