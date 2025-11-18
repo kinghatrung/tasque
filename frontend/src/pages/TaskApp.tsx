@@ -35,6 +35,7 @@ import { authSelect } from "~/redux/slices/authSlice";
 import { Label } from "~/components/ui/label";
 import { Calendar } from "~/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
+import useDebounce from "~/hooks/useDebounce";
 
 const taskSchema = z.object({
   title: z.string().nonempty("Tên công việc bắt buộc phải có"),
@@ -55,6 +56,7 @@ function TaskApp() {
   const [search, setSearch] = useState("");
   const [openChange, setOpenChange] = useState(false);
   const [date, setDate] = useState<Date>();
+  const debouncedSearch = useDebounce(search, 500);
 
   const {
     register,
@@ -74,8 +76,9 @@ function TaskApp() {
   });
 
   const { data: tasks } = useQuery<TaskType[]>({
-    queryKey: ["tasks", statusFilter, priorityFilter, search],
-    queryFn: async () => taskService.getTasks({ status: statusFilter, priority: priorityFilter, search }),
+    queryKey: ["tasks", statusFilter, priorityFilter, debouncedSearch],
+    queryFn: async () =>
+      taskService.getTasks({ status: statusFilter, priority: priorityFilter, search: debouncedSearch }),
   });
 
   const handleCreateTask = async (payload: TaskFormValues) => {
