@@ -3,7 +3,8 @@ import taskService from "../services/taskService.js";
 const taskController = {
   getTasks: async (req, res) => {
     try {
-      const tasks = await taskService.getTasks();
+      const { status, priority, search } = req.query;
+      const tasks = await taskService.getTasks(status, priority, search);
 
       res.status(200).json({ tasks });
     } catch (error) {

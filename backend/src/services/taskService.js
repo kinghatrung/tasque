@@ -1,9 +1,19 @@
 import Task from "../models/Task.js";
 
 const taskService = {
-  getTasks: async () => {
+  getTasks: async (status, priority, search) => {
     try {
-      const tasks = await Task.find().populate("createdBy", "displayName");
+      const query = {};
+      if (status && status !== "all") {
+        query.status = status;
+      }
+      if (priority && priority !== "all") {
+        query.priority = priority;
+      }
+      if (search) {
+        query.title = { $regex: search, $options: "i" };
+      }
+      const tasks = await Task.find(query).populate("createdBy", "displayName");
 
       return tasks;
     } catch (error) {

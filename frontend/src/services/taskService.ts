@@ -1,8 +1,8 @@
 import authorizedAxiosInstance from "~/utils/authorizedAxios";
 
 export const taskService = {
-  getTasks: async () => {
-    const res = await authorizedAxiosInstance.get("tasks");
+  getTasks: async (filter = {}) => {
+    const res = await authorizedAxiosInstance.get("tasks", { params: filter });
     return res.data.tasks;
   },
 

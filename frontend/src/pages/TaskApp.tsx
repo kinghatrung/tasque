@@ -50,6 +50,9 @@ function TaskApp() {
   const queryClient = useQueryClient();
   const { currentUser } = useSelector(authSelect);
 
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [search, setSearch] = useState("");
   const [openChange, setOpenChange] = useState(false);
   const [date, setDate] = useState<Date>();
 
@@ -71,8 +74,8 @@ function TaskApp() {
   });
 
   const { data: tasks } = useQuery<TaskType[]>({
-    queryKey: ["tasks"],
-    queryFn: async () => taskService.getTasks(),
+    queryKey: ["tasks", statusFilter, priorityFilter, search],
+    queryFn: async () => taskService.getTasks({ status: statusFilter, priority: priorityFilter, search }),
   });
 
   const handleCreateTask = async (payload: TaskFormValues) => {
@@ -105,11 +108,12 @@ function TaskApp() {
             type="text"
             placeholder="Nhập để tìm công việc..."
             className="pl-9 pr-4 py-2 h-10 border border-gray-300  text-sm transition-all duration-300"
+            onChange={(e) => setSearch(e.target.value)}
           />
         </div>
 
         <div className="flex items-center gap-3">
-          <Select defaultValue="all">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger
               className="w-50 border border-gray-300 transition-all duration-300 cursor-pointer"
               style={{ height: "40px" }}
@@ -135,7 +139,7 @@ function TaskApp() {
             </SelectContent>
           </Select>
 
-          <Select defaultValue="all">
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
             <SelectTrigger
               className="w-50 border border-gray-300 transition-all duration-300 cursor-pointer"
               style={{ height: "40px" }}
