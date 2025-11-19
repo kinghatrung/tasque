@@ -1,4 +1,5 @@
-import { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -36,6 +37,7 @@ import { Calendar } from "~/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import useDebounce from "~/hooks/useDebounce";
 import TitlePage from "~/components/common/TitlePage";
+import useQueryAndUpdateParams from "~/hooks/useQueryAndUpdateParams";
 
 const taskSchema = z.object({
   title: z.string().nonempty("Tên công việc bắt buộc phải có"),
@@ -49,14 +51,24 @@ type TaskFormValues = z.infer<typeof taskSchema>;
 
 function TaskApp() {
   const queryClient = useQueryClient();
+  const { query, updateParams } = useQueryAndUpdateParams();
   const { currentUser } = useSelector(authSelect);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(query.search || "");
   const [openChange, setOpenChange] = useState(false);
   const [date, setDate] = useState<Date>();
+
   const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    updateParams({
+      status: statusFilter,
+      priority: priorityFilter,
+      search: debouncedSearch,
+    });
+  }, [statusFilter, priorityFilter, debouncedSearch]);
 
   const {
     register,
