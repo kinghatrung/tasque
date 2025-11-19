@@ -18,7 +18,7 @@ const authController = {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
-        maxAge: ms("14 days"),
+        maxAge: ms("14d"),
       });
 
       res.status(200).json({ message: `Người dùng ${user.displayName} đăng nhập thành công!`, accessToken });

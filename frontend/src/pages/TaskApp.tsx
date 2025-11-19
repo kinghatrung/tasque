@@ -16,7 +16,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { Card, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -36,6 +35,7 @@ import { Label } from "~/components/ui/label";
 import { Calendar } from "~/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import useDebounce from "~/hooks/useDebounce";
+import TitlePage from "~/components/common/TitlePage";
 
 const taskSchema = z.object({
   title: z.string().nonempty("Tên công việc bắt buộc phải có"),
@@ -95,14 +95,10 @@ function TaskApp() {
 
   return (
     <div className="flex flex-col min-h-svh">
-      <Card className="mb-5">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold">Quản lý công việc</CardTitle>
-          <CardDescription className="text-lg">
-            Người dùng có thể chỉnh sửa công việc theo ý muốn của bản thân
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <TitlePage
+        title="Quản lý công việc"
+        description="Người dùng có thể chỉnh sửa công việc theo ý muốn của bản thân"
+      />
 
       <div className="flex items-center gap-3 mb-5">
         <div className="relative w-full">
@@ -351,13 +347,21 @@ function TaskApp() {
                 <CircleAlert className="w-10 h-10" />
               </EmptyMedia>
               <EmptyTitle className="text-2xl font-bold">Không có công việc nào</EmptyTitle>
-              <EmptyDescription className="text-lg">Hãy tạo thêm công việc</EmptyDescription>
+              <EmptyDescription className="text-lg">
+                {currentUser?.role === "admin"
+                  ? "Hãy tạo thêm công việc"
+                  : "Hiện tại chưa có công việc, hãy đợi task từ cấp trên!"}
+              </EmptyDescription>
             </EmptyHeader>
-            <EmptyContent>
-              <Button onClick={() => setOpenChange(true)} className="cursor-pointer">
-                Thêm công việc
-              </Button>
-            </EmptyContent>
+            {currentUser?.role === "admin" ? (
+              <EmptyContent>
+                <Button onClick={() => setOpenChange(true)} className="cursor-pointer">
+                  Thêm công việc
+                </Button>
+              </EmptyContent>
+            ) : (
+              ""
+            )}
           </Empty>
         ) : (
           tasks?.map((task) => <Task key={task._id} task={task} />)

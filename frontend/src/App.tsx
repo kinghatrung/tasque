@@ -24,6 +24,7 @@ function App() {
               }
             >
               <Route path="/" element={<TaskApp />} />
+              <Route path="/work" element={<TaskApp />} />
               <Route path="/friends" element={<TaskApp />} />
               <Route path="/group" element={<TaskApp />} />
               <Route path="/statis" element={<TaskApp />} />

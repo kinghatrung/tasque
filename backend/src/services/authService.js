@@ -52,7 +52,7 @@ const authService = {
     try {
       const refreshTokenDecoded = verifyToken(refreshToken, process.env.JWT_SECRET_TOKEN);
       const accessToken = generateToken(
-        { userId: refreshTokenDecoded._id },
+        { userId: refreshTokenDecoded.userId },
         process.env.JWT_SECRET_TOKEN,
         ACCESS_TOKEN_TTL
       );

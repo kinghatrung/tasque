@@ -1,24 +1,29 @@
-import { LayoutGrid, CheckCircle2, Clock, ListTodo } from "lucide-react";
+import { ChartBar, Group, Users, LayoutDashboard, Briefcase } from "lucide-react";
 
 export const menuItems = [
   {
-    label: "Tất cả công việc",
+    label: "Dashboard",
     to: "/",
-    icon: LayoutGrid,
+    icon: LayoutDashboard,
+  },
+  {
+    label: "Công việc",
+    to: "/work",
+    icon: Briefcase,
   },
   {
     label: "Thống kê",
     to: "/statis",
-    icon: ListTodo,
+    icon: ChartBar,
   },
   {
     label: "Bạn bè",
     to: "/friends",
-    icon: Clock,
+    icon: Users,
   },
   {
     label: "Nhóm",
     to: "/group",
-    icon: CheckCircle2,
+    icon: Group,
   },
 ];
