@@ -8,6 +8,15 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "~/components/ui/pagination";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "~/components/ui/empty";
 import {
   Dialog,
@@ -30,7 +39,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import Task from "~/components/common/Task";
 import { taskService } from "~/services/taskService";
-import type { TaskType } from "~/types/task";
+import type { TasksResponse } from "~/types/task";
 import { authSelect } from "~/redux/slices/authSlice";
 import { Label } from "~/components/ui/label";
 import { Calendar } from "~/components/ui/calendar";
@@ -57,9 +66,10 @@ function TaskApp() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
   const [search, setSearch] = useState(query.search || "");
+  const [page, setPage] = useState(1);
   const [openChange, setOpenChange] = useState(false);
   const [date, setDate] = useState<Date>();
-
+  const limit = 5;
   const debouncedSearch = useDebounce(search, 500);
 
   useEffect(() => {
@@ -67,8 +77,10 @@ function TaskApp() {
       status: statusFilter,
       priority: priorityFilter,
       search: debouncedSearch,
+      page,
+      limit,
     });
-  }, [statusFilter, priorityFilter, debouncedSearch]);
+  }, [statusFilter, priorityFilter, debouncedSearch, page, limit]);
 
   const {
     register,
@@ -87,11 +99,23 @@ function TaskApp() {
     },
   });
 
-  const { data: tasks } = useQuery<TaskType[]>({
-    queryKey: ["tasks", statusFilter, priorityFilter, debouncedSearch],
+  const { data: dataTasks } = useQuery<TasksResponse>({
+    queryKey: ["tasks", statusFilter, priorityFilter, debouncedSearch, page],
     queryFn: async () =>
-      taskService.getTasks({ status: statusFilter, priority: priorityFilter, search: debouncedSearch }),
+      taskService.getTasks({ status: statusFilter, priority: priorityFilter, search: debouncedSearch, page, limit }),
+    // Ngăn không refetch khi queryKey giống lúc mount
+    refetchOnMount: false,
+    // Không refetch khi focus tab
+    refetchOnWindowFocus: false,
+    // Không refetch khi reconnect network
+    refetchOnReconnect: false,
+    // Cache giữ lại 10 phút
+    staleTime: Infinity,
   });
+
+  const pagination = dataTasks?.pagination;
+  const hasPrev = dataTasks?.pagination?.hasPrev;
+  const hasNext = dataTasks?.pagination?.hasNext;
 
   const handleCreateTask = async (payload: TaskFormValues) => {
     const { title, description, status, priority, deadline } = payload;
@@ -352,7 +376,7 @@ function TaskApp() {
       </div>
 
       <div className="flex flex-col gap-5">
-        {tasks?.length === 0 ? (
+        {dataTasks?.tasks?.length === 0 ? (
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon">
@@ -376,7 +400,50 @@ function TaskApp() {
             )}
           </Empty>
         ) : (
-          tasks?.map((task) => <Task key={task._id} task={task} />)
+          <>
+            {dataTasks?.tasks.map((task) => (
+              <Task key={task._id} task={task} />
+            ))}
+            <Pagination className="my-7">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    className={`cursor-pointer ${hasPrev ? "" : "opacity-50 pointer-events-none"}`}
+                    onClick={() => hasPrev && setPage(page - 1)}
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: pagination?.totalPages || 0 }, (_, i) => i + 1).map((page) => {
+                  const total = pagination?.totalPages;
+                  const current = pagination?.page || 0;
+
+                  if (page === 1 || page === total || (page >= current - 2 && page <= current + 2)) {
+                    return (
+                      <PaginationItem className="cursor-pointer" key={page}>
+                        <PaginationLink isActive={page === current} onClick={() => setPage(page)}>
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else if (page === current - 3 || page === current + 3) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    className={`cursor-pointer ${hasNext ? "" : "opacity-50 pointer-events-none"}`}
+                    onClick={() => hasNext && setPage(page + 1)}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </>
         )}
       </div>
     </div>

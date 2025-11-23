@@ -12,7 +12,6 @@ function Sidebar() {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
-  const [isOpen, setIsOpen] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleSignOut = async () => {
@@ -22,7 +21,7 @@ function Sidebar() {
 
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 border-r border-border bg-card transition-all duration-300 md:relative md:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-50 border-r h-screen border-border bg-card transition-all duration-300 md:relative md:translate-x-0 ${
         isCollapsed ? "w-[88px]" : "w-[300px]"
       }`}
     >

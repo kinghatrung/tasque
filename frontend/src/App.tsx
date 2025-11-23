@@ -13,7 +13,7 @@ function App() {
   return (
     <div className="App">
       <Toaster />
-      <BrowserRouter basename="/">
+      <BrowserRouter basename="/dashboard">
         <Routes>
           <Route element={<ProtectedRoute />}>
             <Route

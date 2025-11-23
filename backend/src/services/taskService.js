@@ -1,7 +1,7 @@
 import Task from "../models/Task.js";
 
 const taskService = {
-  getTasks: async (status, priority, search) => {
+  getTasks: async (status, priority, search, page = 1, limit = 5) => {
     try {
       const query = {};
       if (status && status !== "all") {
@@ -13,9 +13,28 @@ const taskService = {
       if (search) {
         query.title = { $regex: search, $options: "i" };
       }
-      const tasks = await Task.find(query).populate("createdBy", "displayName");
 
-      return tasks;
+      const skip = (page - 1) * limit;
+
+      const tasks = await Task.find(query)
+        .populate("createdBy", "displayName")
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+      const total = await Task.countDocuments(query);
+
+      return {
+        tasks,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+          hasPrev: page > 1,
+          hasNext: page < Math.ceil(total / limit),
+        },
+      };
     } catch (error) {
       throw error;
     }

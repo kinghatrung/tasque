@@ -4,7 +4,10 @@ const taskController = {
   getTasks: async (req, res) => {
     try {
       const { status, priority, search } = req.query;
-      const tasks = await taskService.getTasks(status, priority, search);
+      const page = parseInt(req.query.page);
+      const limit = parseInt(req.query.limit);
+
+      const tasks = await taskService.getTasks(status, priority, search, page, limit);
 
       res.status(200).json({ tasks });
     } catch (error) {
