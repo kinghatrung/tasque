@@ -25,7 +25,6 @@ const authorizedAxiosInstance: AxiosInstance = axios.create({
 
 let refreshTokenPromise: Promise<string | undefined> | null = null;
 
-// 🟢 REQUEST INTERCEPTOR
 authorizedAxiosInstance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     return config;
@@ -35,7 +34,6 @@ authorizedAxiosInstance.interceptors.request.use(
   }
 );
 
-// 🟠 RESPONSE INTERCEPTOR
 authorizedAxiosInstance.interceptors.response.use(
   (response: AxiosResponse) => {
     if (response.data?.message) {

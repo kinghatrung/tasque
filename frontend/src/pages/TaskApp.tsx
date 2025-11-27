@@ -1,4 +1,5 @@
-import { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -7,6 +8,15 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "~/components/ui/pagination";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "~/components/ui/empty";
 import {
   Dialog,
@@ -16,7 +26,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { Card, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -30,12 +39,14 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import Task from "~/components/common/Task";
 import { taskService } from "~/services/taskService";
-import type { TaskType } from "~/types/task";
+import type { TasksResponse } from "~/types/task";
 import { authSelect } from "~/redux/slices/authSlice";
 import { Label } from "~/components/ui/label";
 import { Calendar } from "~/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/ui/popover";
 import useDebounce from "~/hooks/useDebounce";
+import TitlePage from "~/components/common/TitlePage";
+import useQueryAndUpdateParams from "~/hooks/useQueryAndUpdateParams";
 
 const taskSchema = z.object({
   title: z.string().nonempty("Tên công việc bắt buộc phải có"),
@@ -49,14 +60,27 @@ type TaskFormValues = z.infer<typeof taskSchema>;
 
 function TaskApp() {
   const queryClient = useQueryClient();
+  const { query, updateParams } = useQueryAndUpdateParams();
   const { currentUser } = useSelector(authSelect);
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(query.search || "");
+  const [page, setPage] = useState(1);
   const [openChange, setOpenChange] = useState(false);
   const [date, setDate] = useState<Date>();
+  const limit = 5;
   const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    updateParams({
+      status: statusFilter,
+      priority: priorityFilter,
+      search: debouncedSearch,
+      page,
+      limit,
+    });
+  }, [statusFilter, priorityFilter, debouncedSearch, page, limit]);
 
   const {
     register,
@@ -75,11 +99,23 @@ function TaskApp() {
     },
   });
 
-  const { data: tasks } = useQuery<TaskType[]>({
-    queryKey: ["tasks", statusFilter, priorityFilter, debouncedSearch],
+  const { data: dataTasks } = useQuery<TasksResponse>({
+    queryKey: ["tasks", statusFilter, priorityFilter, debouncedSearch, page],
     queryFn: async () =>
-      taskService.getTasks({ status: statusFilter, priority: priorityFilter, search: debouncedSearch }),
+      taskService.getTasks({ status: statusFilter, priority: priorityFilter, search: debouncedSearch, page, limit }),
+    // Ngăn không refetch khi queryKey giống lúc mount
+    refetchOnMount: false,
+    // Không refetch khi focus tab
+    refetchOnWindowFocus: false,
+    // Không refetch khi reconnect network
+    refetchOnReconnect: false,
+    // Cache giữ lại 10 phút
+    staleTime: Infinity,
   });
+
+  const pagination = dataTasks?.pagination;
+  const hasPrev = dataTasks?.pagination?.hasPrev;
+  const hasNext = dataTasks?.pagination?.hasNext;
 
   const handleCreateTask = async (payload: TaskFormValues) => {
     const { title, description, status, priority, deadline } = payload;
@@ -95,14 +131,10 @@ function TaskApp() {
 
   return (
     <div className="flex flex-col min-h-svh">
-      <Card className="mb-5">
-        <CardHeader>
-          <CardTitle className="text-3xl font-bold">Quản lý công việc</CardTitle>
-          <CardDescription className="text-lg">
-            Người dùng có thể chỉnh sửa công việc theo ý muốn của bản thân
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <TitlePage
+        title="Quản lý công việc"
+        description="Người dùng có thể chỉnh sửa công việc theo ý muốn của bản thân"
+      />
 
       <div className="flex items-center gap-3 mb-5">
         <div className="relative w-full">
@@ -344,23 +376,74 @@ function TaskApp() {
       </div>
 
       <div className="flex flex-col gap-5">
-        {tasks?.length === 0 ? (
+        {dataTasks?.tasks?.length === 0 ? (
           <Empty>
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <CircleAlert className="w-10 h-10" />
               </EmptyMedia>
               <EmptyTitle className="text-2xl font-bold">Không có công việc nào</EmptyTitle>
-              <EmptyDescription className="text-lg">Hãy tạo thêm công việc</EmptyDescription>
+              <EmptyDescription className="text-lg">
+                {currentUser?.role === "admin"
+                  ? "Hãy tạo thêm công việc"
+                  : "Hiện tại chưa có công việc, hãy đợi task từ cấp trên!"}
+              </EmptyDescription>
             </EmptyHeader>
-            <EmptyContent>
-              <Button onClick={() => setOpenChange(true)} className="cursor-pointer">
-                Thêm công việc
-              </Button>
-            </EmptyContent>
+            {currentUser?.role === "admin" ? (
+              <EmptyContent>
+                <Button onClick={() => setOpenChange(true)} className="cursor-pointer">
+                  Thêm công việc
+                </Button>
+              </EmptyContent>
+            ) : (
+              ""
+            )}
           </Empty>
         ) : (
-          tasks?.map((task) => <Task key={task._id} task={task} />)
+          <>
+            {dataTasks?.tasks.map((task) => (
+              <Task key={task._id} task={task} />
+            ))}
+            <Pagination className="my-7">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    className={`cursor-pointer ${hasPrev ? "" : "opacity-50 pointer-events-none"}`}
+                    onClick={() => hasPrev && setPage(page - 1)}
+                  />
+                </PaginationItem>
+
+                {Array.from({ length: pagination?.totalPages || 0 }, (_, i) => i + 1).map((page) => {
+                  const total = pagination?.totalPages;
+                  const current = pagination?.page || 0;
+
+                  if (page === 1 || page === total || (page >= current - 2 && page <= current + 2)) {
+                    return (
+                      <PaginationItem className="cursor-pointer" key={page}>
+                        <PaginationLink isActive={page === current} onClick={() => setPage(page)}>
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else if (page === current - 3 || page === current + 3) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+
+                <PaginationItem>
+                  <PaginationNext
+                    className={`cursor-pointer ${hasNext ? "" : "opacity-50 pointer-events-none"}`}
+                    onClick={() => hasNext && setPage(page + 1)}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </>
         )}
       </div>
     </div>
