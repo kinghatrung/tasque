@@ -12,8 +12,8 @@ import DefaultLayout from "~/layouts/DefaultLayout";
 function App() {
   return (
     <div className="App">
-      <Toaster />
-      <BrowserRouter basename="/">
+      <Toaster richColors />
+      <BrowserRouter basename="/dashboard">
         <Routes>
           <Route element={<ProtectedRoute />}>
             <Route
@@ -24,6 +24,7 @@ function App() {
               }
             >
               <Route path="/" element={<TaskApp />} />
+              <Route path="/work" element={<TaskApp />} />
               <Route path="/friends" element={<TaskApp />} />
               <Route path="/group" element={<TaskApp />} />
               <Route path="/statis" element={<TaskApp />} />
