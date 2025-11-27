@@ -12,7 +12,7 @@ import DefaultLayout from "~/layouts/DefaultLayout";
 function App() {
   return (
     <div className="App">
-      <Toaster />
+      <Toaster richColors />
       <BrowserRouter basename="/dashboard">
         <Routes>
           <Route element={<ProtectedRoute />}>
